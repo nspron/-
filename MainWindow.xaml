@@ -1,0 +1,167 @@
+﻿<Window x:Class="BlackHoleBox.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="黑洞盒子"
+        Height="500"
+        Width="900"
+        WindowStyle="None"
+        AllowsTransparency="True">
+    <Window.Resources>
+        <Style x:Key="NoBorderButton"
+               TargetType="Button">
+            <Setter Property="BorderThickness"
+                    Value="0"/>
+            <Setter Property="Background"
+                    Value="Transparent"/>
+            <Setter Property="Padding"
+                    Value="0"/>
+            <Setter Property="Width"
+                    Value="50"/>
+            <Setter Property="Foreground"
+                    Value="#0078D7"/>
+        </Style>
+    </Window.Resources>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- 标题栏 -->
+        <Grid Background="#0078D7"
+              Grid.Row="0"
+              MouseDown="TitleBar_MouseDown">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <TextBlock Text="黑洞盒子"
+                       VerticalAlignment="Center"
+                       Margin="10"
+                       FontSize="20"
+                       Foreground="White"/>
+            <Border Background="#0078D7"
+                    Grid.Column="1"
+                    Margin="0,5,10,5"
+                    VerticalAlignment="Center"
+                    MouseLeftButtonDown="CloseButton_MouseLeftButtonDown">
+                <TextBlock Text="X"
+                           FontSize="16"
+                           FontWeight="Bold"
+                           Foreground="White"
+                           HorizontalAlignment="Center"
+                           VerticalAlignment="Center"
+                           Padding="5"/>
+            </Border>
+        </Grid>
+
+        <!-- 内容区域 -->
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- 预览块 -->
+            <StackPanel Grid.Column="0">
+                <!-- 预览块1 -->
+                <Border Background="#0078D7"
+                        Width="100"
+                        Height="50"
+                        Margin="10"
+                        MouseLeftButtonDown="PreviewBlock1_Click">
+                    <TextBlock Text="我的仓库"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center"
+                               Margin="10"
+                               FontSize="15"
+                               Foreground="White"/>
+                </Border>
+                <!-- 预览块2 -->
+                <Border Background="#0078D7"
+                        Width="100"
+                        Height="50"
+                        Margin="10"
+                        MouseLeftButtonDown="PreviewBlock2_Click">
+                    <TextBlock Text="风灵月影"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center"
+                               Margin="10"
+                               FontSize="15"
+                               Foreground="White"/>
+                </Border>
+                <!-- 预览块3 -->
+                <Border Background="#0078D7"
+                        Width="100"
+                        Height="50"
+                        Margin="10"
+                        MouseLeftButtonDown="PreviewBlock3_Click">
+                    <TextBlock Text="软件关于"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center"
+                               Margin="10"
+                               FontSize="15"
+                               Foreground="White"/>
+                </Border>
+            </StackPanel>
+
+            <!-- 视图1 -->
+            <Grid x:Name="View1"
+                  Grid.Column="1">
+                <!-- 添加视图1的内容 -->
+                <TextBlock Text="我的仓库"
+                           HorizontalAlignment="Center"
+                           VerticalAlignment="Center"
+                           FontSize="20"/>
+            </Grid>
+
+            <!-- 视图2 -->
+            <Grid x:Name="View2"
+                  Grid.Column="1"
+                  Visibility="Collapsed">
+                <!-- 使用 ScrollViewer 包装 Grid -->
+                <ScrollViewer VerticalScrollBarVisibility="Auto"
+                              HorizontalScrollBarVisibility="Auto">
+                    <!-- 在 ScrollViewer 中添加一个新的 Grid -->
+                    <Grid x:Name="View2_list"
+                          Grid.Column="1">
+                        <!-- 添加视图2的内容 -->
+                        <TextBlock Text="网络加载中..."
+                                   HorizontalAlignment="Center"
+                                   VerticalAlignment="Center"
+                                   FontSize="20"/>
+                        <!-- 在 Grid 中可以添加其他控件或内容 -->
+                    </Grid>
+                </ScrollViewer>
+            </Grid>
+
+            <!-- 视图3 -->
+            <Grid x:Name="View3"
+                    Grid.Column="1"
+                    Visibility="Collapsed">
+                <StackPanel >
+                    <TextBlock Text="风灵月影"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            FontSize="20"
+                            Margin="0,150,0,10"/>
+                    <TextBlock Text="https://flingtrainer.com"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            FontSize="15"/>
+                    <TextBlock Text="项目地址"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            FontSize="20"
+                            Margin="0,10,0,0"/>
+                    <TextBlock Text="https://github.com/nspron/BlackHoleBox"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            FontSize="15"/>
+                </StackPanel>
+            </Grid>
+
+
+        </Grid>
+    </Grid>
+</Window>
