@@ -107,22 +107,32 @@ namespace YourNamespace
         // 下载文件的异步方法
         private static async Task DownloadFileAsync(HttpClient client, string url, string fileName)
         {
-            using (var response = await client.GetAsync(url)) // 发送 HTTP 请求以下载文件
+            // 获取当前目录
+            string currentDirectory = Directory.GetCurrentDirectory();
+            // 组合得到 tool 目录路径
+            string toolDirectory = Path.Combine(currentDirectory, "tool");
+            // 在 tool 目录下创建与文件名相同的文件夹路径
+            string innerDirectoryPath = Path.Combine(toolDirectory, fileName);
+
+            // 组合得到文件具体路径
+            string filePath = Path.Combine(innerDirectoryPath, $"{fileName}.rar");
+
+            // 如果该文件不存在
+            if (!File.Exists(filePath))
             {
-                response.EnsureSuccessStatusCode(); // 确保请求成功
-                var content = await response.Content.ReadAsByteArrayAsync(); // 读取文件内容
+                using (var response = await client.GetAsync(url)) // 发送 HTTP 请求以下载文件
+                {
+                    response.EnsureSuccessStatusCode(); // 确保请求成功
+                    var content = await response.Content.ReadAsByteArrayAsync(); // 读取文件内容
 
-                string currentDirectory = Directory.GetCurrentDirectory(); // 获取当前目录
-                string directoryPath = Path.Combine(currentDirectory, fileName); // 构建目录路径
-                Directory.CreateDirectory(directoryPath); // 创建目录
+                    Directory.CreateDirectory(innerDirectoryPath);  // 创建文件夹
 
-                string filePath = Path.Combine(directoryPath, $"{fileName}.rar"); // 构建文件路径
-                File.WriteAllBytes(filePath, content); // 将文件内容写入文件
-
-                await ExtractAndOpenFilesAsync(filePath, directoryPath); // 解压并打开文件
+                    File.WriteAllBytes(filePath, content); // 将文件内容写入文件
+                }
             }
-        }
 
+            await ExtractAndOpenFilesAsync(filePath, innerDirectoryPath); // 解压并打开文件
+        }
         // 解压并打开文件的异步方法
         private static async Task ExtractAndOpenFilesAsync(string filePath, string directoryPath)
         {
@@ -135,7 +145,7 @@ namespace YourNamespace
                         if (!entry.IsDirectory) // 如果条目不是目录
                         {
                             string destinationPath = Path.Combine(directoryPath, entry.Key); // 构建目标路径
-                            
+
                             entry.WriteToFile(destinationPath, new ExtractionOptions { ExtractFullPath = true, Overwrite = true }); // 将条目写入文件
 
                             string extension = Path.GetExtension(entry.Key); // 获取文件扩展名

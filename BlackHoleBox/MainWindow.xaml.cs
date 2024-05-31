@@ -222,6 +222,7 @@ namespace BlackHoleBox
             // 切换到视图1
             View1.Visibility = Visibility.Visible;
             View2.Visibility = Visibility.Collapsed;
+            View3.Visibility = Visibility.Collapsed;
         }
 
         // 切换到视图2的方法
@@ -229,6 +230,15 @@ namespace BlackHoleBox
         {
             View1.Visibility = Visibility.Collapsed;
             View2.Visibility = Visibility.Visible;
+            View3.Visibility = Visibility.Collapsed;
+        }
+
+        // 切换到视图3的方法
+        private void PreviewBlock3_Click(object sender, RoutedEventArgs e)
+        {
+            View1.Visibility = Visibility.Collapsed;
+            View2.Visibility = Visibility.Collapsed;
+            View3.Visibility = Visibility.Visible;
         }
 
         // 当标题栏被按下时，开始拖动窗口
