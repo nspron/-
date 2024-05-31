@@ -1,10 +1,12 @@
 ﻿using System.Windows; // 引入 WPF 相关命名空间
-using System.Windows.Controls;
-using System.Windows.Input;
+using System.Windows.Controls; // WPF 控件库 按钮、文本框
+using System.Windows.Input;  //处理输入事件的命名空间
 using System.Net.Http; // 引入用于发送 HTTP 请求的命名空间
+using System.IO; // 引入文件操作相关的命名空间
+using System.Windows.Media;  //媒体相关的类，如颜色、图像等
 using HtmlAgilityPack; // 引入用于 HTML 解析的命名空间
-using System.Windows.Media;
-using YourNamespace; // 引入你的自定义命名空间
+using YourNamespace;
+
 
 namespace BlackHoleBox
 {
@@ -137,83 +139,128 @@ namespace BlackHoleBox
             }
         }
 
-        // 爬取链接的方法
-        private async Task<Dictionary<char, List<(string text, string link)>>> ExtractLinksByAlphabetAsync()
+        private const string FilePath = "./data.bin"; // 存储文件路径
+
+        public async Task<Dictionary<char, List<(string text, string link)>>> ExtractLinksByAlphabetAsync()
         {
-            // 创建存储链接的字典
             Dictionary<char, List<(string text, string link)>> linksByAlphabet = new Dictionary<char, List<(string text, string link)>>();
 
-            // 创建 HttpClient 实例
+            // 检查文件是否存在，如果存在则从文件加载数据
+            if (File.Exists(FilePath))
+            {
+                string fileContent = File.ReadAllText(FilePath); // 读取文件内容
+                linksByAlphabet = DeserializeLinks(fileContent); // 反序列化文件内容
+            }
+            else
+            {
+                // 如果文件不存在，则从网络获取数据
+                linksByAlphabet = await FetchLinksFromWeb(); // 从网络获取数据
+                                                             // 将获取的数据保存到文件中
+                string serializedData = SerializeLinks(linksByAlphabet); // 序列化获取的数据
+                File.WriteAllText(FilePath, serializedData); // 写入文件
+            }
+
+            return linksByAlphabet; // 返回获取的数据
+        }
+
+        private async Task<Dictionary<char, List<(string text, string link)>>> FetchLinksFromWeb()
+        {
+            Dictionary<char, List<(string text, string link)>> linksByAlphabet = new Dictionary<char, List<(string text, string link)>>();
+
             using (HttpClient client = new HttpClient())
             {
                 try
                 {
-                    // 发送 GET 请求获取页面内容
-                    HttpResponseMessage response = await client.GetAsync("https://flingtrainer.com/all-trainers-a-z/");
-
-                    // 确保请求成功
-                    response.EnsureSuccessStatusCode();
-
-                    // 读取响应内容
-                    string htmlContent = await response.Content.ReadAsStringAsync();
-
-                    // 创建 HtmlDocument 实例并加载 HTML 内容
+                    HttpResponseMessage response = await client.GetAsync("https://flingtrainer.com/all-trainers-a-z/"); // 发送GET请求
+                    response.EnsureSuccessStatusCode(); // 确保请求成功
+                    string htmlContent = await response.Content.ReadAsStringAsync(); // 读取响应内容
                     HtmlDocument htmlDocument = new HtmlDocument();
-                    htmlDocument.LoadHtml(htmlContent);
+                    htmlDocument.LoadHtml(htmlContent); // 加载HTML内容
 
-                    // 提取所有以"a-z-listing-letter-"开头的 ID
                     for (char letter = 'A'; letter <= 'Z' || letter == '_'; letter = letter == 'Z' ? '_' : (char)(letter + 1))
                     {
                         string targetId = $"a-z-listing-letter-{letter}-1";
-                        // 查找指定 ID 的节点
-                        HtmlNode targetNode = htmlDocument.GetElementbyId(targetId);
+                        HtmlNode targetNode = htmlDocument.GetElementbyId(targetId); // 查找指定ID的节点
 
-                        // 如果找到了目标节点
                         if (targetNode != null)
                         {
-                            // 查找目标节点内的所有 <a> 标签
-                            HtmlNodeCollection aTags = targetNode.SelectNodes(".//a");
-
-                            // 如果找到了 <a> 标签
-                            if (aTags != null)
-                            {
-                                // 创建用于存储链接和文本内容的列表
-                                List<(string text, string link)> links = new List<(string text, string link)>();
-
-                                // 遍历所有 <a> 标签并添加到列表中
-                                foreach (HtmlNode aTag in aTags)
-                                {
-                                    string text = aTag.InnerText.Trim();
-                                    string link = aTag.GetAttributeValue("href", "");
-
-                                    // 检查文本内容，如果不是以 "Back to top" 开头，则添加到列表中
-                                    if (!text.StartsWith("Back to top"))
-                                    {
-                                        links.Add((text, link));
-                                    }
-                                }
-
-                                // 将列表添加到字典中以字母为键
-                                linksByAlphabet.Add(letter, links);
-                            }
-                            else
-                            {
-                                Console.WriteLine($"在 {targetId} 中未找到 <a> 标签。");
-                            }
+                            List<(string text, string link)> links = ExtractLinksFromNode(targetNode); // 从节点中提取链接
+                            linksByAlphabet.Add(letter, links); // 将提取的链接添加到字典中
                         }
                         else
                         {
-                            Console.WriteLine($"未找到指定 ID {targetId} 的节点。");
+                            Console.WriteLine($"未找到指定 ID {targetId} 的节点。"); // 输出错误信息
                         }
                     }
                 }
                 catch (HttpRequestException ex)
                 {
-                    Console.WriteLine($"HTTP 请求失败: {ex.Message}");
+                    Console.WriteLine($"HTTP 请求失败: {ex.Message}"); // 输出HTTP请求失败的错误信息
                 }
             }
 
-            return linksByAlphabet;
+            return linksByAlphabet; // 返回获取的数据
+        }
+
+        private List<(string text, string link)> ExtractLinksFromNode(HtmlNode node)
+        {
+            List<(string text, string link)> links = new List<(string text, string link)>();
+            HtmlNodeCollection aTags = node.SelectNodes(".//a"); // 查找节点内的所有<a>标签
+
+            if (aTags != null)
+            {
+                foreach (HtmlNode aTag in aTags)
+                {
+                    string text = aTag.InnerText.Trim(); // 提取链接文本
+                    string link = aTag.GetAttributeValue("href", ""); // 提取链接地址
+
+                    if (!text.StartsWith("Back to top"))
+                    {
+                        links.Add((text, link)); // 将提取的链接添加到列表中
+                    }
+                }
+            }
+            else
+            {
+                Console.WriteLine($"在节点中未找到 <a> 标签。"); // 输出错误信息
+            }
+
+            return links; // 返回提取的链接列表
+        }
+
+        private string SerializeLinks(Dictionary<char, List<(string text, string link)>> linksByAlphabet)
+        {
+            // 将链接序列化为字符串（例如，使用JSON）
+            // 这里只是简单地将数据连接起来
+            List<string> serializedData = new List<string>();
+            foreach (var kvp in linksByAlphabet)
+            {
+                foreach (var linkTuple in kvp.Value)
+                {
+                    serializedData.Add($"{kvp.Key}-{linkTuple.text}-{linkTuple.link}");
+                }
+            }
+            return string.Join("\n", serializedData); // 返回序列化后的字符串
+        }
+
+        private Dictionary<char, List<(string text, string link)>> DeserializeLinks(string serializedData)
+        {
+            // 将字符串反序列化为字典
+            Dictionary<char, List<(string text, string link)>> linksByAlphabet = new Dictionary<char, List<(string text, string link)>>();
+            string[] lines = serializedData.Split('\n');
+            foreach (string line in lines)
+            {
+                string[] parts = line.Split('-');
+                char letter = parts[0][0];
+                string text = parts[1];
+                string link = parts[2];
+                if (!linksByAlphabet.ContainsKey(letter))
+                {
+                    linksByAlphabet[letter] = new List<(string text, string link)>();
+                }
+                linksByAlphabet[letter].Add((text, link));
+            }
+            return linksByAlphabet; // 返回反序列化后的字典
         }
 
         // 切换到视图1的方法

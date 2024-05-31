@@ -1,14 +1,17 @@
 using System.Windows; // 引入 WPF 相关命名空间
-using System.Windows.Input;
+using System.Windows.Input; //处理输入事件的命名空间
 using System.Diagnostics; // 引入用于进程控制的命名空间
 using System.IO; // 引入文件操作相关的命名空间
 using System.Net.Http; // 引入用于 HTTP 请求的命名空间
-using HtmlAgilityPack; // 引入用于 HTML 解析的命名空间
-using SharpCompress.Archives; // 引入用于解压缩文件的命名空间
-using SharpCompress.Common; // 引入用于解压缩文件的命名空间
 using System.Text; // 引入用于字符串操作的命名空间
 using System.Windows.Media; // 引入用于界面元素的命名空间
 using System.Windows.Controls; // 引入用于界面元素的命名空间
+using HtmlAgilityPack; // 引入用于 HTML 解析的命名空间
+using SharpCompress.Archives; // 引入用于解压缩文件的命名空间
+using SharpCompress.Common; // 引入用于解压缩文件的命名空间
+
+
+
 
 namespace YourNamespace
 {
@@ -34,9 +37,12 @@ namespace YourNamespace
             Close(); // 关闭窗口
         }
 
-        // 处理下载的异步方法
+        // 处理网页的异步方法
         public static async Task HandleDownloadAsync(string linkText, string linkUrl)
         {
+            DownloadWindow downloadWindow = new DownloadWindow(); // 创建下载窗口实例
+            downloadWindow.Show(); // 显示窗口
+
             HttpClient client = new HttpClient(); // 创建 HTTP 客户端实例
             string html = await client.GetStringAsync(linkUrl); // 发送 HTTP 请求并获取 HTML 内容
 
@@ -49,10 +55,9 @@ namespace YourNamespace
             {
                 StringBuilder allLinksText = new StringBuilder(); // 创建字符串构建器以存储所有链接文本
                 // 在同一个窗口中显示所有链接文本
-                DownloadWindow downloadWindow = new DownloadWindow(); // 创建下载窗口实例
-                downloadWindow.Show(); // 显示窗口
-                Grid grid = downloadWindow.View1; // 获取 Grid 元素
 
+                Grid grid = downloadWindow.View1; // 获取 Grid 元素
+                grid.Children.Clear(); // 清空 Grid 中的所有子元素
                 int row = 0; // 初始化行数
 
                 foreach (var a in links) // 遍历找到的链接
@@ -146,8 +151,13 @@ namespace YourNamespace
                         {
                             string destinationPath = Path.Combine(directoryPath, entry.Key); // 构建目标路径
 
-                            entry.WriteToFile(destinationPath, new ExtractionOptions { ExtractFullPath = true, Overwrite = true }); // 将条目写入文件
+                            bool exeFound = Directory.GetFiles(directoryPath, "*.exe").Length > 0; // 检查目录下是否存在.exe文件
 
+                            if (!exeFound)
+                            {
+                                entry.WriteToFile(destinationPath, new ExtractionOptions { ExtractFullPath = true, Overwrite = true }); // 将条目写入文件
+                            }
+                            
                             string extension = Path.GetExtension(entry.Key); // 获取文件扩展名
                             string fullPath = Path.Combine(directoryPath, entry.Key); // 获取完整路径
 
@@ -156,6 +166,7 @@ namespace YourNamespace
                             {
                                 await TryOpenFileAsync(fullPath); // 尝试打开文件
                             }
+
                         }
                     }
                 }

@@ -47,7 +47,10 @@
 
         <Grid x:Name="View1"
               Grid.Row="1">
-
+            <TextBlock Text="网络加载中..."
+                       HorizontalAlignment="Center"
+                       VerticalAlignment="Center"
+                       FontSize="20"/>
         </Grid>
 
     </Grid>
